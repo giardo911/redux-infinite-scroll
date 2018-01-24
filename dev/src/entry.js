@@ -1,51 +1,46 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import InfScroller from '../../src/ReduxInfiniteScroll';
+import { Loading } from "common/loading";
+import InfiniteScroll from "lib/redux-infinite-scroll/ReduxInfiniteScroll";
+import React from "react";
 
-class App extends React.Component {
-  state =  {
-    numOfItems: 40,
-    loadingMore: false
-  };
-
-  _createData(numOfItems=this.state.numOfItems) {
-    const data = [];
-    for (var i=0; i < numOfItems; i++) {
-      data.push(
-          <div key={i}>Item #{i}</div>
-      )
-    }
-
-    return data;
-  }
-
-  _loadMore() {
-    console.log('loading More');
-    this.setState({loadingMore: true}, () => {
-      // CB emulates an ajax request
-      this.setState({
-        numOfItems: this.state.numOfItems + 40,
-        loadingMore: false
-      })
-    })
-  }
-
-  render() {
-    return (
-        <div>
-          <h2>Dev Env</h2>
-          <InfScroller loadMore={this._loadMore.bind(this)}
-                       hasMore={true}
-                       loadingMore={this.state.loadingMore}
-                       showLoader={true}
-                       threshold={50}
-                       containerHeight={200}
-                       animateItems={true}
-                       items={this._createData()}
-          />
-        </div>
-    )
-  }
+interface IProps {
+    items: any[];
+    count: number;
+    pageNo: number;
+    loadingMore: boolean;
+    elementIsScrollable: boolean;
+    pageSize: number;
+    getNext: () => void;
+    mapper: (item: any) => JSX.Element;
 }
 
-ReactDOM.render(<App />, document.getElementById('entry'));
+const InfiniteTable = (props: IProps) => {
+    const { items, mapper, count, loadingMore, pageNo, pageSize, elementIsScrollable } = props;
+
+    const rows = items && items.map(mapper);
+    const getNext = () => {
+        props.getNext();
+    };
+
+    return (
+        <InfiniteScroll
+            className="sp-block-table__body"
+            loadMore={getNext}
+            loadingMore={loadingMore}
+            elementIsScrollable={false}
+            hasMore={(pageNo * pageSize) < count}
+            showLoader={true}
+            threshold={100}
+            loader={
+                <div className="sp-block-table__row sp-block-table__row_loader">
+                    <div className="sp-block-table__loader-container">
+                        <Loading />
+                    </div>
+                </div>
+            }
+        >
+            {rows}
+        </InfiniteScroll>
+    );
+};
+
+export { InfiniteTable };
